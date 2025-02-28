@@ -1,26 +1,26 @@
 import streamlit as st
-import anthropic
-from anthropic import Anthropic
+import openai
+from openai import OpenAI
 
 # 제목과 설명 표시
 st.title("⚓ LNGC 운용 메뉴얼 도우미")
 st.write(
-    "LNGC 운용 메뉴얼을 입력하고 질문해주세요 - Claude AI가 답변해드립니다! "
-    "이 앱을 사용하려면 Anthropic API 키가 필요합니다."
+    "LNGC 운용 메뉴얼을 입력하고 질문해주세요 - GPT AI가 답변해드립니다! "
+    "이 앱을 사용하려면 OpenAI API 키가 필요합니다."
 )
 
-# Anthropic API 키 입력 받기
-claude_api_key = st.text_input("Anthropic API Key", type="password")
-if not claude_api_key:
-    st.info("Anthropic API 키를 입력해주세요.", icon="🗝️")
+# OpenAI API 키 입력 받기
+openai_api_key = st.text_input("OpenAI API Key", type="password")
+if not openai_api_key:
+    st.info("OpenAI API 키를 입력해주세요.", icon="🗝️")
 else:
-    # Anthropic 클라이언트 생성
-    client = Anthropic(api_key=claude_api_key)
+    # OpenAI 클라이언트 생성
+    client = OpenAI(api_key=openai_api_key)
     
     # 사용 가능한 모델 목록 표시
-    available_models = ["claude-2.1", "claude-2.0", "claude-instant-1.2"]
+    available_models = ["gpt-4", "gpt-4-turbo-preview", "gpt-3.5-turbo"]
     selected_model = st.selectbox(
-        "사용할 Claude 모델을 선택하세요",
+        "사용할 GPT 모델을 선택하세요",
         available_models
     )
 
@@ -40,18 +40,19 @@ else:
     if manual_text and question:
         # 메시지 구성
         messages = [
+            {"role": "system", "content": "LNGC 운용 메뉴얼에 대한 전문가입니다."},
             {
                 "role": "user",
                 "content": f"다음은 LNGC 운용 메뉴얼입니다: {manual_text}\n\n질문: {question}\n\n위 메뉴얼 내용을 바탕으로 기술적이고 상세한 답변을 제공해주세요."
             }
         ]
 
-        # Claude API를 통해 답변 생성
-        response = client.messages.create(
+        # OpenAI API를 통해 답변 생성
+        response = client.chat.completions.create(
             model=selected_model,
             messages=messages,
             max_tokens=1000
         )
 
         # 답변 표시
-        st.write(response.content)
+        st.write(response.choices[0].message.content)
