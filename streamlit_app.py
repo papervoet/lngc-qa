@@ -1,53 +1,57 @@
 import streamlit as st
-from openai import OpenAI
+import anthropic
+from anthropic import Anthropic
 
-# Show title and description.
-st.title("📄 Document question answering")
+# 제목과 설명 표시
+st.title("⚓ LNGC 운용 메뉴얼 도우미")
 st.write(
-    "Upload a document below and ask a question about it – GPT will answer! "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
+    "LNGC 운용 메뉴얼을 입력하고 질문해주세요 - Claude AI가 답변해드립니다! "
+    "이 앱을 사용하려면 Anthropic API 키가 필요합니다."
 )
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-openai_api_key = st.text_input("OpenAI API Key", type="password")
-if not openai_api_key:
-    st.info("Please add your OpenAI API key to continue.", icon="🗝️")
+# Anthropic API 키 입력 받기
+claude_api_key = st.text_input("Anthropic API Key", type="password")
+if not claude_api_key:
+    st.info("Anthropic API 키를 입력해주세요.", icon="🗝️")
 else:
-
-    # Create an OpenAI client.
-    client = OpenAI(api_key=openai_api_key)
-
-    # Let the user upload a file via `st.file_uploader`.
-    uploaded_file = st.file_uploader(
-        "Upload a document (.txt or .md)", type=("txt", "md")
+    # Anthropic 클라이언트 생성
+    client = Anthropic(api_key=claude_api_key)
+    
+    # 사용 가능한 모델 목록 표시
+    available_models = ["claude-2.1", "claude-2.0", "claude-instant-1.2"]
+    selected_model = st.selectbox(
+        "사용할 Claude 모델을 선택하세요",
+        available_models
     )
 
-    # Ask the user for a question via `st.text_area`.
+    # 메뉴얼 텍스트 입력 받기
+    manual_text = st.text_area(
+        "LNGC 운용 메뉴얼 내용을 입력하세요",
+        height=200
+    )
+
+    # 사용법 질문 입력 받기
     question = st.text_area(
-        "Now ask a question about the document!",
-        placeholder="Can you give me a short summary?",
-        disabled=not uploaded_file,
+        "메뉴얼에 대해 궁금한 점을 질문해주세요",
+        placeholder="특정 운용 절차나 기술적 방법에 대해 물어보세요",
+        disabled=not manual_text,
     )
 
-    if uploaded_file and question:
-
-        # Process the uploaded file and question.
-        document = uploaded_file.read().decode()
+    if manual_text and question:
+        # 메시지 구성
         messages = [
             {
                 "role": "user",
-                "content": f"Here's a document: {document} \n\n---\n\n {question}",
+                "content": f"다음은 LNGC 운용 메뉴얼입니다: {manual_text}\n\n질문: {question}\n\n위 메뉴얼 내용을 바탕으로 기술적이고 상세한 답변을 제공해주세요."
             }
         ]
 
-        # Generate an answer using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+        # Claude API를 통해 답변 생성
+        response = client.messages.create(
+            model=selected_model,
             messages=messages,
-            stream=True,
+            max_tokens=1000
         )
 
-        # Stream the response to the app using `st.write_stream`.
-        st.write_stream(stream)
+        # 답변 표시
+        st.write(response.content)
