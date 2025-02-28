@@ -1,12 +1,11 @@
 import streamlit as st
 import openai
 from openai import OpenAI
-from PyPDF2 import PdfReader
 
 # 제목과 설명 표시
 st.title("⚓ LNGC 운용 메뉴얼 도우미")
 st.write(
-    "LNGC 운용 메뉴얼 PDF를 업로드하고 질문해주세요 - GPT AI가 답변해드립니다! "
+    "LNGC 운용 메뉴얼을 입력하고 질문해주세요 - GPT AI가 답변해드립니다! "
     "이 앱을 사용하려면 OpenAI API 키가 필요합니다."
 )
 
@@ -25,16 +24,11 @@ else:
         available_models
     )
 
-    # PDF 파일 업로더 추가
-    uploaded_file = st.file_uploader("LNGC 운용 메뉴얼 PDF 파일을 업로드하세요", type="pdf")
-    
-    manual_text = ""
-    if uploaded_file is not None:
-        pdf_reader = PdfReader(uploaded_file)
-        for page in pdf_reader.pages:
-            manual_text += page.extract_text()
-        
-        st.success("PDF 파일이 성공적으로 업로드되었습니다!")
+    # 메뉴얼 텍스트 입력 받기
+    manual_text = st.text_area(
+        "LNGC 운용 메뉴얼 내용을 입력하세요",
+        height=200
+    )
 
     # 사용법 질문 입력 받기
     question = st.text_area(
